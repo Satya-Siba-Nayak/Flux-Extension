@@ -67,5 +67,5 @@ jobs:
           token: ${{ secrets.WEBSITE_DISPATCH_PAT }}
           repository: Satya-Siba-Nayak/Flux-Extension-Website
           event-type: extension-released
-          client-payload: '{"version": "${{ env.RELEASE_VERSION }}", "tag": "${{ github.event.release.tag_name || github.ref_name }}", "url": "${{ github.event.release.html_url || concat(''https://github.com/'', github.repository, ''/releases/tag/'', github.ref_name) }}"}'
+          client-payload: '{"version": "${{ env.RELEASE_VERSION }}", "tag": "${{ github.event.release.tag_name || github.ref_name }}", "url": "${{ github.event.release.html_url || format(''https://github.com/{0}/releases/tag/{1}'', github.repository, github.ref_name) }}"}'
         continue-on-error: true
