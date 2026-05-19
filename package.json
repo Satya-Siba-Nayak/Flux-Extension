@@ -1,6 +1,6 @@
 {
   "name": "flux-extension",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Flux is a modern browser extension that seamlessly converts and localizes prices on any webpage using real-time global exchange rates. With a clean, minimal interface, Flux provides instant feedback and automatic price conversions directly on the sites you browse.",
   "main": "background.js",
   "scripts": {
