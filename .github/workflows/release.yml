@@ -1,0 +1,71 @@
+name: Build and Upload Extension Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 2.3.0, overrides manifest/tag if provided)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Extract version name
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAG_NAME="${{ github.event.release.tag_name }}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.version }}" ]; then
+            TAG_NAME="${{ github.event.inputs.version }}"
+          else
+            TAG_NAME="${{ github.ref_name }}"
+            TAG_NAME="${TAG_NAME##*/}"
+          fi
+          
+          # Clean version string (remove leading 'v' if present)
+          VERSION="${TAG_NAME#v}"
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Version extracted: $VERSION"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Build extension packages
+        run: npm run build -- ${{ env.RELEASE_VERSION }}
+
+      - name: Upload assets to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name || github.ref_name }}
+          files: dist/flux-*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Dispatch release event to website repo
+        # Only runs if the release token is set to prevent failure in forks or draft tests
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.WEBSITE_DISPATCH_PAT }}
+          repository: Satya-Siba-Nayak/Flux-Extension-Website
+          event-type: extension-released
+          client-payload: '{"version": "${{ env.RELEASE_VERSION }}", "tag": "${{ github.event.release.tag_name || github.ref_name }}", "url": "${{ github.event.release.html_url || concat(''https://github.com/'', github.repository, ''/releases/tag/'', github.ref_name) }}"}'
+        continue-on-error: true

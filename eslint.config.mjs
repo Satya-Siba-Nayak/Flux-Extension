@@ -27,6 +27,16 @@ export default defineConfig([
 
   // Ignore non-source directories
   {
-    ignores: ["node_modules/", "web-ext-artifacts/", "assets/"],
+    ignores: ["node_modules/", "web-ext-artifacts/", "assets/", "dist/"],
+  },
+
+  // Node.js scripts configuration
+  {
+    files: ["scripts/**/*.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
   },
 ]);

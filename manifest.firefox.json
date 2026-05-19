@@ -1,20 +1,29 @@
 {
   "manifest_version": 3,
   "name": "Flux",
-  "version": "2.2",
+  "version": "2.2.0",
   "browser_specific_settings": {
     "gecko": {
       "id": "flux@satya-nayak.dev",
       "strict_min_version": "109.0",
       "data_collection_permissions": {
-        "required": ["none"]
+        "required": [
+          "none"
+        ]
       }
     }
   },
   "background": {
-    "scripts": ["background.js"]
+    "scripts": [
+      "background.js"
+    ]
   },
-  "permissions": ["activeTab", "storage", "alarms", "tabs"],
+  "permissions": [
+    "activeTab",
+    "storage",
+    "alarms",
+    "tabs"
+  ],
   "icons": {
     "16": "assets/Flux transparent-16x.png",
     "32": "assets/Flux transparent-32x.png",
@@ -36,9 +45,15 @@
   ],
   "content_scripts": [
     {
-      "matches": ["*://*/*"],
-      "js": ["content.js"],
-      "css": ["content.css"]
+      "matches": [
+        "*://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ]
     }
   ]
 }

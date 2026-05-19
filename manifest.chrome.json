@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Flux",
-  "version": "2.2",
+  "version": "2.2.0",
   "description": "A modern, fluid currency converter that seamlessly localizes prices on any webpage with real-time global exchange rates.",
   "permissions": [
     "activeTab",
@@ -33,9 +33,15 @@
   ],
   "content_scripts": [
     {
-      "matches": ["*://*/*"],
-      "js": ["content.js"],
-      "css": ["content.css"]
+      "matches": [
+        "*://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ]
     }
   ]
 }
