@@ -11,7 +11,7 @@ Flux is a modern browser extension that seamlessly converts and localizes prices
 | Browser | Link |
 |---|---|
 | **Chrome / Other Chromium-based Browsers** | [Chrome Web Store](https://chromewebstore.google.com/detail/lageadcjahlpmmbepfmehmcmbndpfkkk) |
-| **Firefox** | [Manual Install](#for-firefox) *(AMO listing coming soon)* |
+| **Firefox** | [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/flux-auto-currency-converter/) |
 | **Microsoft Edge** | [Manual Install](#for-developers-manual-installation) *(Edge Add-ons listing coming soon)* |
 
 ## Features
@@ -42,13 +42,20 @@ Flux is a modern browser extension that seamlessly converts and localizes prices
 
 ### For Firefox
 
+👉 **[Install Flux from Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/flux-auto-currency-converter/)**
+
+> **Note:** Requires Firefox 109 or newer (Manifest V3).
+
+<details>
+<summary>Manual Installation (for developers)</summary>
+
 1. Download or clone this repository.
 2. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`.
 3. Click **Load Temporary Add-on**.
-4. Select the `manifest.json` file from the `Flux-Extension` folder.
+4. Select the `manifest.firefox.json` file from the `Flux-Extension` folder.
 5. The Flux icon will appear in your toolbar. Pin it for quick access!
 
-> **Note:** Firefox support requires Firefox 109 or newer (Manifest V3). A permanent listing on [Firefox Add-ons (AMO)](https://addons.mozilla.org/) is coming soon.
+</details>
 
 ### For Microsoft Edge
 
