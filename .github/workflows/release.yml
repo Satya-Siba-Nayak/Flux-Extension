@@ -5,8 +5,8 @@ on:
     types: [published]
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to build (e.g., 2.3.0, overrides manifest/tag if provided)'
+      tag_name:
+        description: 'Release Tag to build/upload to (e.g., v2.3.0). Leave empty for Dry-Run build validation (no upload).'
         required: false
 
 permissions:
@@ -31,11 +31,11 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "release" ]; then
             TAG_NAME="${{ github.event.release.tag_name }}"
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.version }}" ]; then
-            TAG_NAME="${{ github.event.inputs.version }}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            TAG_NAME="${{ github.event.inputs.tag_name }}"
           else
-            TAG_NAME="${{ github.ref_name }}"
-            TAG_NAME="${TAG_NAME##*/}"
+            # Dry-run fallback: Read version from package.json
+            TAG_NAME=$(node -p "require('./package.json').version")
           fi
           
           # Clean version string (remove leading 'v' if present)
@@ -54,18 +54,21 @@ jobs:
 
       - name: Upload assets to GitHub Release
         uses: softprops/action-gh-release@v2
+        # Only run if triggered by a release publish, or manual run with target tag_name
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag_name != '')
         with:
-          tag_name: ${{ github.event.release.tag_name || github.ref_name }}
+          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
           files: dist/flux-*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Dispatch release event to website repo
-        # Only runs if the release token is set to prevent failure in forks or draft tests
+        # Only run if a release upload actually took place
+        if: success() && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag_name != ''))
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.WEBSITE_DISPATCH_PAT }}
           repository: Satya-Siba-Nayak/Flux-Extension-Website
           event-type: extension-released
-          client-payload: '{"version": "${{ env.RELEASE_VERSION }}", "tag": "${{ github.event.release.tag_name || github.ref_name }}", "url": "${{ github.event.release.html_url || format(''https://github.com/{0}/releases/tag/{1}'', github.repository, github.ref_name) }}"}'
+          client-payload: '{"version": "${{ env.RELEASE_VERSION }}", "tag": "${{ github.event.release.tag_name || github.event.inputs.tag_name }}", "url": "${{ github.event.release.html_url || format(''https://github.com/{0}/releases/tag/{1}'', github.repository, github.event.release.tag_name || github.event.inputs.tag_name) }}"}'
         continue-on-error: true
