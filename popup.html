@@ -5,9 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flux Converter</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="popup.css">
 </head>
 
@@ -40,7 +37,7 @@
         <div class="label">Live Exchange Rate</div>
       </div>
 
-      <div class="rate-display">
+      <div id="rateDisplay" class="rate-display" title="Click to toggle inverse rate">
         <span id="currentRate" class="massive-rate">Loading...</span>
         <span class="rate-meta" id="lastUpdated">Updated just now</span>
       </div>
@@ -86,6 +83,23 @@
             <option value="cny">CNY</option>
             <option value="sgd">SGD</option>
           </select>
+        </div>
+      </div>
+
+      <div class="calculator-container">
+        <div class="calc-row">
+          <input type="number" id="calcInput" class="calc-input" placeholder="Amount" value="1" min="0" step="any">
+          <span id="calcBaseSymbol" class="calc-symbol">USD</span>
+        </div>
+        <div class="calc-divider">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <polyline points="19 12 12 19 5 12"></polyline>
+          </svg>
+        </div>
+        <div class="calc-row result-row">
+          <span id="calcResult" class="calc-result">-</span>
+          <span id="calcTargetSymbol" class="calc-symbol">INR</span>
         </div>
       </div>
 

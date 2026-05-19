@@ -15,7 +15,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const disabledSection = document.getElementById("disabledSection");
   const disabledList = document.getElementById("disabledList");
 
+  const rateDisplayEl = document.getElementById("rateDisplay");
+  const calcInput = document.getElementById("calcInput");
+  const calcResult = document.getElementById("calcResult");
+  const calcBaseSymbol = document.getElementById("calcBaseSymbol");
+  const calcTargetSymbol = document.getElementById("calcTargetSymbol");
+
   let currentRootDomain = null;
+  let showInverseRate = false;
+  let currentRateValue = null;
+  let lastUpdateValue = null;
   let disabledDomains = [];
 
   // ── Request tracking for race condition prevention ────────────
@@ -89,10 +98,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── Exchange Rate Logic ───────────────────────────────────────
   
+  function updateCalculator() {
+    const base = baseCurrencySelect.value;
+    const target = targetCurrencySelect.value;
+    if (calcBaseSymbol) calcBaseSymbol.textContent = base.toUpperCase();
+    if (calcTargetSymbol) calcTargetSymbol.textContent = target.toUpperCase();
+
+    if (!currentRateValue || !calcResult || !calcInput) {
+      if (calcResult) calcResult.textContent = "-";
+      return;
+    }
+
+    const val = parseFloat(calcInput.value);
+    if (isNaN(val) || val < 0) {
+      calcResult.textContent = "-";
+      return;
+    }
+
+    const result = val * currentRateValue;
+    
+    let formattedResult;
+    if (result < 0.01) formattedResult = result.toFixed(6);
+    else if (result < 1) formattedResult = result.toFixed(4);
+    else if (target === 'jpy') formattedResult = result.toFixed(0);
+    else formattedResult = result.toFixed(2);
+
+    calcResult.textContent = formattedResult;
+  }
+
   function updateRateDisplay(rate, lastUpdate) {
+    currentRateValue = rate;
+    lastUpdateValue = lastUpdate;
+
     if (!rate) {
       currentRateEl.textContent = "Unavailable";
       lastUpdatedEl.textContent = "Check connection";
+      updateCalculator();
       return;
     }
     
@@ -101,16 +142,28 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Format nicely based on value (e.g., JPY needs no decimals, small values need more)
     let formattedRate;
-    if (rate < 0.01) formattedRate = rate.toFixed(6);
-    else if (rate < 1) formattedRate = rate.toFixed(4);
-    else if (target === 'jpy') formattedRate = rate.toFixed(0);
-    else formattedRate = rate.toFixed(2);
+    if (showInverseRate) {
+      const inverseRate = 1 / rate;
+      if (inverseRate < 0.01) formattedRate = inverseRate.toFixed(6);
+      else if (inverseRate < 1) formattedRate = inverseRate.toFixed(4);
+      else if (base === 'jpy') formattedRate = inverseRate.toFixed(0);
+      else formattedRate = inverseRate.toFixed(2);
 
-    currentRateEl.textContent = `1 ${SYMBOLS[base] || base.toUpperCase()} = ${formattedRate} ${SYMBOLS[target] || target.toUpperCase()}`;
+      currentRateEl.textContent = `1 ${SYMBOLS[target] || target.toUpperCase()} = ${formattedRate} ${SYMBOLS[base] || base.toUpperCase()}`;
+    } else {
+      if (rate < 0.01) formattedRate = rate.toFixed(6);
+      else if (rate < 1) formattedRate = rate.toFixed(4);
+      else if (target === 'jpy') formattedRate = rate.toFixed(0);
+      else formattedRate = rate.toFixed(2);
+
+      currentRateEl.textContent = `1 ${SYMBOLS[base] || base.toUpperCase()} = ${formattedRate} ${SYMBOLS[target] || target.toUpperCase()}`;
+    }
     
     if (lastUpdate) {
       lastUpdatedEl.textContent = `Updated ${timeAgo(lastUpdate)}`;
     }
+
+    updateCalculator();
   }
 
   /**
@@ -319,6 +372,18 @@ document.addEventListener("DOMContentLoaded", () => {
       item.appendChild(btn);
       disabledList.appendChild(item);
     }
+  }
+
+  // ── Calculator & Rate Toggle Listeners ──────────────────────────
+  if (rateDisplayEl) {
+    rateDisplayEl.addEventListener("click", () => {
+      showInverseRate = !showInverseRate;
+      updateRateDisplay(currentRateValue, lastUpdateValue);
+    });
+  }
+
+  if (calcInput) {
+    calcInput.addEventListener("input", updateCalculator);
   }
 
   // ── Helpers ───────────────────────────────────────────────────
