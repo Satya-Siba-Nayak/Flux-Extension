@@ -12,7 +12,7 @@ Flux is a modern browser extension that seamlessly converts and localizes prices
 |---|---|
 | **Chrome / Other Chromium-based Browsers** | [Chrome Web Store](https://chromewebstore.google.com/detail/lageadcjahlpmmbepfmehmcmbndpfkkk) |
 | **Firefox** | [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/flux-auto-currency-converter/) |
-| **Microsoft Edge** | [Manual Install](#for-developers-manual-installation) *(Edge Add-ons listing coming soon)* |
+| **Microsoft Edge** | [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/flux/pdndcmofadhgkjmdnnaeakijfmjbhlbj) |
 
 ## Features
 
@@ -59,6 +59,11 @@ Flux is a modern browser extension that seamlessly converts and localizes prices
 
 ### For Microsoft Edge
 
+👉 **[Install Flux from the Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/flux/pdndcmofadhgkjmdnnaeakijfmjbhlbj)**
+
+<details>
+<summary>Manual Installation (for developers)</summary>
+
 Edge uses the same Chromium extension format — the same package works on both Chrome and Edge with zero changes.
 
 1. Download or clone this repository.
@@ -67,7 +72,7 @@ Edge uses the same Chromium extension format — the same package works on both 
 4. Click **Load unpacked** and select the `Flux-Extension` folder.
 5. Pin the Flux icon for easy access.
 
-> **Note:** A listing on the [Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/) store is planned.
+</details>
 
 ### For Developers (Manual Installation)
 
