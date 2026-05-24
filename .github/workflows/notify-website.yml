@@ -1,17 +1,33 @@
-name: Notify Website on PR Merge
+name: Notify Website on PR Merge & Release
+
 on:
   pull_request:
     types: [closed]
     branches: [main]
+  release:
+    types: [published]
+
 jobs:
-  notify:
-    if: github.event.pull_request.merged == true
+  notify-contributor:
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: Dispatch to website repo
+      - name: Dispatch contributor update to website repo
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.WEBSITE_DISPATCH_PAT }}
           repository: Satya-Siba-Nayak/Flux-Extension-Website
           event-type: contributor-merged
           client-payload: '{"pr": "${{ github.event.pull_request.number }}", "user": "${{ github.event.pull_request.user.login }}"}'
+
+  notify-version:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch version update to website repo
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.WEBSITE_DISPATCH_PAT }}
+          repository: Satya-Siba-Nayak/Flux-Extension-Website
+          event-type: version-released
+          client-payload: '{"tag": "${{ github.event.release.tag_name }}"}'
