@@ -39,4 +39,14 @@ export default defineConfig([
       },
     },
   },
+
+  // Test files configuration
+  {
+    files: ["tests/**/*.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
 ]);

@@ -339,3 +339,28 @@ input:checked+.slider:before { transform: translateX(20px); background-color: va
   margin: 0.5rem 0;
   padding-left: 4px;
 }
+
+/* ── Disabled / Coming Soon Setting ─────────────────────── */
+.setting-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+  user-select: none;
+}
+
+.coming-soon-tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent-slice);
+  background: rgba(184, 255, 74, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+[data-theme="light"] .coming-soon-tag {
+  background: rgba(0, 213, 75, 0.1);
+  color: #009933;
+}

@@ -10,19 +10,51 @@ let processedNodes = new WeakSet();
 
 // ── Currency Data ────────────────────────────────────────────────
 
+// Magnitude words and abbreviations mapped to their multiplier values.
+// Used to handle inputs like "$4 million" or "€2.5bn".
+const MAGNITUDE_WORDS = {
+  hundred:       100,
+  thousand:      1_000,
+  lakh:          100_000,
+  lakhs:         100_000,
+  million:       1_000_000,
+  crore:         10_000_000,
+  crores:        10_000_000,
+  billion:       1_000_000_000,
+  trillion:      1_000_000_000_000,
+  // Common abbreviations
+  k:             1_000,
+  m:             1_000_000,
+  mn:            1_000_000,
+  b:             1_000_000_000,
+  bn:            1_000_000_000,
+  t:             1_000_000_000_000,
+  tn:            1_000_000_000_000,
+  cr:            10_000_000,
+  l:             100_000,
+};
+
+// Build the magnitude suffix pattern dynamically from MAGNITUDE_WORDS keys.
+// Longer keys first so e.g. "billion" matches before "b", "mn" before "m".
+const MAGNITUDE_KEYS_PATTERN = Object.keys(MAGNITUDE_WORDS)
+  .sort((a, b) => b.length - a.length)
+  .join("|");
+const MAGNITUDE_SUFFIX = `(?:\\s*(${MAGNITUDE_KEYS_PATTERN})\\b)?`;
+
 // Regex patterns defined as strings to create fresh instances each time.
 // This avoids shared lastIndex state issues with global regex objects.
+// Each regex now includes an optional second capture group for magnitude words.
 const CURRENCIES = {
-  usd: { symbol: "$", locale: "en-US", code: "USD", regexSource: "(?<![CAS])\\$([\\d,]+\\.?\\d*)", regexFlags: "g" },
-  eur: { symbol: "€", locale: "de-DE", code: "EUR", regexSource: "€\\s?([\\d.]+,?\\d*)", regexFlags: "g" },
-  gbp: { symbol: "£", locale: "en-GB", code: "GBP", regexSource: "£([\\d,]+\\.?\\d*)", regexFlags: "g" },
-  inr: { symbol: "₹", locale: "en-IN", code: "INR", regexSource: "₹\\s?([\\d,]+\\.?\\d*)", regexFlags: "g" },
-  jpy: { symbol: "¥", locale: "ja-JP", code: "JPY", regexSource: "¥([\\d,]+\\.?\\d*)", regexFlags: "g" },
-  cad: { symbol: "C$", locale: "en-CA", code: "CAD", regexSource: "(?:C\\$|CAD\\s)([\\d,]+\\.?\\d*)", regexFlags: "g" },
-  aud: { symbol: "A$", locale: "en-AU", code: "AUD", regexSource: "(?:A\\$|AUD\\s)([\\d,]+\\.?\\d*)", regexFlags: "g" },
-  chf: { symbol: "CHF", locale: "de-CH", code: "CHF", regexSource: "CHF\\s?([\\d']+\\.?\\d*)", regexFlags: "g" },
-  cny: { symbol: "CN¥", locale: "zh-CN", code: "CNY", regexSource: "(?:CN¥|RMB)\\s?([\\d,]+\\.?\\d*)", regexFlags: "g" },
-  sgd: { symbol: "S$", locale: "en-SG", code: "SGD", regexSource: "(?:S\\$|SGD\\s)([\\d,]+\\.?\\d*)", regexFlags: "g" }
+  usd: { symbol: "$", locale: "en-US", code: "USD", regexSource: `(?<![CAS])\\$([\\d,]+\\.?\\d*)${MAGNITUDE_SUFFIX}`, regexFlags: "gi" },
+  eur: { symbol: "€", locale: "de-DE", code: "EUR", regexSource: `€\\s?([\\d.]+,?\\d*)${MAGNITUDE_SUFFIX}`, regexFlags: "gi" },
+  gbp: { symbol: "£", locale: "en-GB", code: "GBP", regexSource: `£([\\d,]+\\.?\\d*)${MAGNITUDE_SUFFIX}`, regexFlags: "gi" },
+  inr: { symbol: "₹", locale: "en-IN", code: "INR", regexSource: `₹\\s?([\\d,]+\\.?\\d*)${MAGNITUDE_SUFFIX}`, regexFlags: "gi" },
+  jpy: { symbol: "¥", locale: "ja-JP", code: "JPY", regexSource: `¥([\\d,]+\\.?\\d*)${MAGNITUDE_SUFFIX}`, regexFlags: "gi" },
+  cad: { symbol: "C$", locale: "en-CA", code: "CAD", regexSource: `(?:C\\$|CAD\\s)([\\d,]+\\.?\\d*)${MAGNITUDE_SUFFIX}`, regexFlags: "gi" },
+  aud: { symbol: "A$", locale: "en-AU", code: "AUD", regexSource: `(?:A\\$|AUD\\s)([\\d,]+\\.?\\d*)${MAGNITUDE_SUFFIX}`, regexFlags: "gi" },
+  chf: { symbol: "CHF", locale: "de-CH", code: "CHF", regexSource: `CHF\\s?([\\d']+\\.?\\d*)${MAGNITUDE_SUFFIX}`, regexFlags: "gi" },
+  cny: { symbol: "CN¥", locale: "zh-CN", code: "CNY", regexSource: `(?:CN¥|RMB)\\s?([\\d,]+\\.?\\d*)${MAGNITUDE_SUFFIX}`, regexFlags: "gi" },
+  sgd: { symbol: "S$", locale: "en-SG", code: "SGD", regexSource: `(?:S\\$|SGD\\s)([\\d,]+\\.?\\d*)${MAGNITUDE_SUFFIX}`, regexFlags: "gi" }
 };
 
 /**
@@ -142,10 +174,13 @@ function convertTextNode(node) {
   if (!replaceRegex.test(text)) return;
   replaceRegex.lastIndex = 0; // reset before the replace pass
 
-  const newText = text.replace(replaceRegex, (match, amountStr) => {
+  const newText = text.replace(replaceRegex, (match, amountStr, magnitudeWord) => {
     const amount = parseCurrency(amountStr, baseCurrency);
     if (!isNaN(amount) && amount > 0) {
-      return formatCurrency(amount * exchangeRate, targetCurrency);
+      const multiplier = magnitudeWord
+        ? (MAGNITUDE_WORDS[magnitudeWord.toLowerCase()] || 1)
+        : 1;
+      return formatCurrency(amount * multiplier * exchangeRate, targetCurrency);
     }
     return match;
   });
@@ -189,11 +224,15 @@ function convertStructuredPrices(root) {
 
     // match[0] is full match, we need the capture group
     // Re-parse with a named approach
-    const singleRegex = new RegExp(cur.regexSource);
+    const singleRegex = new RegExp(cur.regexSource, 'i');
     const singleMatch = rawText.match(singleRegex);
     if (!singleMatch || !singleMatch[1]) continue;
 
-    const amount = parseCurrency(singleMatch[1], baseCurrency);
+    const magnitudeWord = singleMatch[2];
+    const magnitudeMultiplier = magnitudeWord
+      ? (MAGNITUDE_WORDS[magnitudeWord.toLowerCase()] || 1)
+      : 1;
+    const amount = parseCurrency(singleMatch[1], baseCurrency) * magnitudeMultiplier;
     if (isNaN(amount) || amount <= 0) continue;
 
     const convertedValue = amount * exchangeRate;
